@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Software del Cerebro</title>
+    <style>
+        /* --- ESTÉTICA --- */
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --accent-blue: #38bdf8;
+            --accent-red: #f87171;
+            --accent-green: #4ade80;
+            --card-bg: rgba(30, 41, 59, 0.95);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        .scrolly-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- GRÁFICO (Sticky) --- */
+        .graphic-stage {
+            position: sticky;
+            top: 0;
+            height: 60vh;
+            width: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        /* --- TEXTOS (Scroll) --- */
+        .narrative-column {
+            position: relative;
+            z-index: 2;
+            padding-bottom: 20vh;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .step {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0.3;
+            transition: opacity 0.5s ease;
+        }
+
+        .step.active {
+            opacity: 1;
+        }
+
+        .text-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-left: 6px solid var(--accent-blue);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h2 { margin-top: 0; color: #fff; font-size: 1.8rem; }
+        p { line-height: 1.8; font-size: 1.1rem; color: #cbd5e1; }
+
+        /* --- SVG STYLES --- */
+        svg {
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+        }
+
+        /* Regla global para asegurar renderizado correcto */
+        svg * {
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .silhouette {
+            fill: #0f172a;
+            stroke: #475569;
+            stroke-width: 1.5;
+            opacity: 0.9;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        /* ESTILOS DE LOS NERVIOS */
+        .nerve-path {
+            fill: none;
+            stroke: #334155;
+            stroke-width: 1;
+            opacity: 0.6;
+        }
+        
+        .main-nerve {
+            stroke: #64748b;
+            stroke-width: 1.5;
+            opacity: 0.8;
+        }
+
+        .brain-emoji {
+            font-size: 40px;
+            user-select: none;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+        }
+
+        /* --- PUNTOS DE SEÑAL (ESTADOS) --- */
+        /* Ahora solo controlamos apariencia, no movimiento */
+        
+        .signal-dot {
+            r: 3;
+            opacity: 0; 
+            transition: fill 0.3s, r 0.3s, opacity 0.3s;
+        }
+
+        /* Estado 1: Normal (Azul) */
+        .state-1 .signal-dot {
+            fill: var(--accent-blue);
+            opacity: 1;
+            filter: drop-shadow(0 0 4px var(--accent-blue));
+        }
+
+        /* Estado 2: Error (Rojo, Glitch visual) */
+        .state-2 .signal-dot {
+            fill: var(--accent-red);
+            opacity: 1;
+            animation: glitch-strobe 0.1s infinite;
+        }
+        
+        /* CORRECCIÓN SOMBRAS: Valores por defecto estrictos */
+        .symptom-marker {
+            opacity: 0;
+            fill: none;   /* Imprescindible para evitar sombras negras */
+            stroke: none; /* Imprescindible para evitar bordes fantasmas */
+            transition: opacity 0.5s;
+        }
+
+        .state-2 .symptom-marker {
+            opacity: 1;
+            stroke: var(--accent-red);
+            stroke-width: 2;
+            fill: none;
+            animation: pulse-red 1s infinite;
+        }
+
+        /* Estado 3: Hardware (Escáner Verde - Señales ocultas) */
+        .state-3 .signal-dot { 
+            opacity: 0; 
+        }
+        .state-3 .symptom-marker { opacity: 0; }
+        .state-3 .hardware-scan {
+            opacity: 1;
+            stroke: var(--accent-green);
+            stroke-width: 1.5;
+            stroke-dasharray: 4,4;
+            fill: none;
+            animation: scan 3s ease-in-out infinite;
+        }
+
+        /* Estado 4: Terapia (Verde) */
+        .state-4 .signal-dot {
+            fill: var(--accent-green);
+            opacity: 1;
+            filter: drop-shadow(0 0 4px var(--accent-green));
+        }
+
+        /* --- KEYFRAMES --- */
+        
+        @keyframes glitch-strobe {
+            0% { opacity: 1; r: 3; }
+            50% { opacity: 0.3; r: 5; } 
+            100% { opacity: 1; r: 3; }
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+        @keyframes scan {
+            0% { stroke-dashoffset: 100; opacity: 0.5; }
+            50% { stroke-dashoffset: 0; opacity: 1; }
+            100% { stroke-dashoffset: -100; opacity: 0.5; }
+        }
+
+        /* MEDIA QUERIES */
+        @media (min-width: 700px) {
+            .scrolly-container { flex-direction: row; }
+            .graphic-stage { width: 50%; height: 100vh; }
+            .narrative-column { width: 50%; padding-bottom: 40vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <main class="scrolly-container">
+        
+        <div class="graphic-stage" id="graphicStage">
+            <svg viewBox="0 0 300 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                
+                <!-- SILUETA ANATÓMICA -->
+                <path class="silhouette" d="
+                    M 150 20
+                    C 165 20 175 35 175 55   
+                    C 175 65 170 75 165 80   
+                    L 190 85                 
+                    C 210 90 220 100 225 120 
+                    L 230 280                
+                    C 230 290 225 295 215 295 
+                    C 205 295 200 290 200 280 
+                    L 195 180                
+                    L 185 320                
+                    L 185 550                
+                    L 195 570                
+                    L 160 570                
+                    L 160 350                
+                    L 150 350                
+                    L 140 350                
+                    L 140 570                
+                    L 105 570                
+                    L 115 550                
+                    L 115 320                
+                    L 105 180                
+                    L 100 280                
+                    C 100 290 95 295 85 295  
+                    C 75 295 70 290 70 280   
+                    L 75 120                 
+                    C 80 100 90 90 110 85    
+                    L 135 80                 
+                    C 130 75 125 65 125 55   
+                    C 125 35 135 20 150 20 Z"
+                />
+
+                <!-- RED NERVIOSA -->
+                <path id="n1" class="nerve-path main-nerve" d="M150,60 C160,80 200,100 220,275" />
+                <path id="n2" class="nerve-path" d="M150,60 C140,80 100,100 80,275" />
+                <path id="n3" class="nerve-path" d="M150,60 C155,200 170,400 185,550" />
+                <path id="n4" class="nerve-path main-nerve" d="M150,60 C145,200 130,400 115,550" />
+                <path id="n5" class="nerve-path main-nerve" d="M150,60 C150,150 150,200 150,250" />
+                <path id="n6" class="nerve-path" d="M150,55 C155,55 160,50 162,50" />
+                <path id="n7" class="nerve-path" d="M150,55 C145,55 138,52 135,55" />
+                <path id="n8" class="nerve-path main-nerve" d="M150,55 L150,75" />
+                <path id="n9" class="nerve-path" d="M150,70 C160,100 170,120 175,160" />
+                <path id="n10" class="nerve-path" d="M150,70 C140,100 130,120 125,160" />
+                <path id="n11" class="nerve-path" d="M150,60 C155,200 160,300 170,380" />
+                <path id="n12" class="nerve-path" d="M150,60 C140,70 120,80 110,100" />
+
+                <!-- SEÑALES ANIMADAS CON JS (Sin SMIL) -->
+                <!-- Eliminamos animateMotion. Solo círculos simples con data-path. -->
+                
+                <circle class="signal-dot" data-path="n1" r="3" />
+                <circle class="signal-dot" data-path="n2" r="3" />
+                <circle class="signal-dot" data-path="n3" r="3" />
+                <circle class="signal-dot" data-path="n4" r="3" />
+                <circle class="signal-dot" data-path="n5" r="3" />
+                <circle class="signal-dot" data-path="n6" r="3" />
+                <circle class="signal-dot" data-path="n7" r="3" />
+                <circle class="signal-dot" data-path="n8" r="3" />
+                <circle class="signal-dot" data-path="n9" r="3" />
+                <circle class="signal-dot" data-path="n10" r="3" />
+                <circle class="signal-dot" data-path="n11" r="3" />
+                <circle class="signal-dot" data-path="n12" r="3" />
+
+                <!-- MARCADORES DE SÍNTOMAS -->
+                <circle class="symptom-marker" cx="220" cy="275" r="15" />
+                <rect class="symptom-marker" x="105" y="540" width="20" height="20" />
+                <circle class="symptom-marker" cx="162" cy="50" r="5" />
+                <path class="symptom-marker" d="M145,75 Q150,80 155,75" />
+                <path class="symptom-marker" d="M140,250 L150,240 L160,260 L170,250" />
+
+                <!-- ESCÁNER DE HARDWARE -->
+                <circle class="hardware-scan" cx="150" cy="55" r="30" style="opacity:0" /> <!-- Cerebro -->
+                <circle class="hardware-scan" cx="150" cy="250" r="25" style="opacity:0" /> <!-- Estómago -->
+                <circle class="hardware-scan" cx="220" cy="275" r="20" style="opacity:0" /> <!-- Mano -->
+
+                <!-- EL CEREBRO -->
+                <text x="150" y="65" text-anchor="middle" class="brain-emoji">🧠</text>
+
+            </svg>
+        </div>
+
+        <!-- NARRATIVA -->
+        <div class="narrative-column">
+            
+            <div class="step" data-step="1">
+                <div class="text-card">
+                    <h2>📞 La Centralita Perfecta</h2>
+                    <p>Imagina tu cerebro como una <strong>centralita de operaciones</strong> ultra eficiente. Cuando quieres moverte o hablar, envía un "email eléctrico" instantáneo a través de los nervios.</p>
+                    <p>En condiciones normales, la señal es clara, fluye sin obstáculos y llega a su destino (mano, pierna, estómago) perfectamente.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="2">
+                <div class="text-card" style="border-left-color: var(--accent-red);">
+                    <h2>⚡ El "Glitch" del Sistema</h2>
+                    <p>Pero a veces, ocurre un fallo en el software. La señal se interrumpe, se vuelve ruidosa o se envía al lugar equivocado.</p>
+                    <p>La orden de "mover mano" se convierte en "temblor". La digestión tranquila se convierte en señal de dolor. Es un error de comunicación interna.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="3">
+                <div class="text-card" style="border-left-color: var(--accent-green);">
+                    <h2>💾 Hardware vs. Software</h2>
+                    <p>Aquí está la clave: Si hacemos un escáner, <strong>todo sale perfecto</strong>. El cerebro está sano, los órganos están intactos. No hay heridas.</p>
+                    <p>No es un problema de <em>Hardware</em> (estructura), es un problema de <em>Software</em> (funcionamiento). No estás roto, solo desconfigurado.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="4">
+                <div class="text-card" style="border-left-color: var(--accent-blue);">
+                    <h2>🛠️ La Reprogramación</h2>
+                    <p>La buena noticia es que el software se puede actualizar. Con terapia, enseñamos al cerebro a usar el camino correcto de nuevo.</p>
+                    <p>Al principio es lento, pero poco a poco, la señal vuelve a fluir correctamente y los síntomas disminuyen.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- 1. LÓGICA DE MOVIMIENTO DE BOLAS (JAVASCRIPT PURO) ---
+        // Esto reemplaza a animateMotion para máxima compatibilidad
+        
+        const dots = document.querySelectorAll('.signal-dot');
+
+        dots.forEach(dot => {
+            const pathId = dot.dataset.path;
+            const path = document.getElementById(pathId);
+            
+            if (path) {
+                const length = path.getTotalLength();
+                // Velocidad aleatoria para que se vea orgánico (no todos a la vez)
+                // Más pequeño = más lento. 
+                const speed = 0.00015 + Math.random() * 0.0002; 
+                const offset = Math.random() * length; // Empezar en sitio random
+                let start = performance.now();
+
+                function move(t) {
+                    // Calculamos progreso basado en tiempo
+                    // (t * speed) nos da un avance constante
+                    // offset añade variedad inicial
+                    const dist = (offset + (t * speed * length)) % length;
+                    
+                    const point = path.getPointAtLength(dist);
+                    
+                    dot.setAttribute('cx', point.x);
+                    dot.setAttribute('cy', point.y);
+                    
+                    requestAnimationFrame(move);
+                }
+
+                requestAnimationFrame(move);
+            }
+        });
+
+
+        // --- 2. LÓGICA DE SCROLLYTELLING (CAMBIO DE ESTADOS) ---
+        
+        const graphicStage = document.getElementById('graphicStage');
+        const steps = document.querySelectorAll('.step');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                    entry.target.classList.add('active');
+
+                    const stepNumber = entry.target.dataset.step;
+                    graphicStage.className = 'graphic-stage'; 
+                    if (stepNumber) graphicStage.classList.add(`state-${stepNumber}`);
+                }
+            });
+        }, { threshold: 0.5, rootMargin: "-10% 0px -10% 0px" });
+
+        steps.forEach(step => observer.observe(step));
+    </script>
+</body>
+</html>
