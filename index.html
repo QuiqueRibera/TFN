@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Centralita del Cerebro</title>
+    <title>La Centraleta del Cervell</title>
     <style>
         /* --- ESTÉTICA --- */
         :root {
@@ -98,25 +98,32 @@
             max-width: 600px;
         }
         
-        svg * { transform-box: fill-box; transform-origin: center; }
+        /* FIX FIREFOX: Solo aplicamos transform-box a elementos que se transforman con CSS */
+        .headset, .alert-marker, .battery-fill, .scan-laser, .hardware-ok, .brain-fill-rect, #main-scene {
+            transform-box: fill-box;
+            transform-origin: center;
+        }
 
         /* --- ELEMENTOS GRÁFICOS --- */
         
         .headset { fill: #334155; }
 
-        /* CEREBRO "BATERÍA" */
-        /* Ahora el cerebro tiene un relleno animable */
+        /* CEREBRO */
         .brain-outline {
             fill: none;
             stroke: #db2777; 
             stroke-width: 3;
-            pointer-events: none; /* Dejar pasar clicks si hubiera */
+            pointer-events: none;
             z-index: 10;
         }
         
-        .brain-fill {
-            fill: #fbcfe8; /* Color base (Rosa sano) */
-            transition: fill 0.5s, height 0.5s, y 0.5s;
+        /* El líquido del cerebro */
+        .brain-fill-rect {
+            fill: #fbcfe8; 
+            transition: fill 0.5s;
+            /* Controlamos la altura con transform scaleY */
+            transform-origin: bottom;
+            transform: scaleY(1);
         }
 
         /* Cables Generales */
@@ -142,15 +149,22 @@
         .dest-icon {
             font-size: 30px;
             opacity: 0.5;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s, transform 0.3s;
             text-anchor: middle;
             user-select: none;
         }
 
-        /* Señales */
-        .signal-dot { r: 4; fill: #fff; stroke-width: 1.5; transition: opacity 0.3s; }
+        /* Señales (Bolas) */
+        /* FIX FIREFOX: Eliminado r:4 de CSS, ahora está en HTML */
+        .signal-dot { 
+            fill: #fff; 
+            stroke-width: 1.5; 
+            transition: opacity 0.3s; 
+        }
+        
+        /* Viajeros (Emojis) */
         .traveler-emoji { 
-            font-size: 30px; 
+            font-size: 30px; /* Tamaño grande igualado */
             opacity: 0; 
             transition: opacity 0.3s; 
             text-anchor: middle; 
@@ -163,7 +177,7 @@
         .fill-yellow { fill: var(--c-yellow); }
         .fill-orange { fill: var(--c-orange); }
 
-        /* Marcadores de Alerta */
+        /* Marcadores de Alerta Estáticos */
         .alert-marker {
             font-size: 40px;
             opacity: 0; 
@@ -173,12 +187,12 @@
             dominant-baseline: middle;
         }
 
-        /* Batería Gigante */
+        /* Batería */
         .battery-container {
-            transition: opacity 0.5s;
+            transition: opacity 0.5s, transform 0.5s;
         }
-        .battery-body { fill: white; stroke: #334155; stroke-width: 3; }
-        .battery-fill { fill: #10b981; }
+        .battery-body { fill: white; stroke: #334155; stroke-width: 2; }
+        .battery-fill { fill: #10b981; transition: fill 0.5s; }
 
         /* Escáner */
         .scan-laser {
@@ -195,7 +209,7 @@
             transition: opacity 0.5s 0.5s;
         }
 
-        /* --- LÓGICA DE ESTADOS --- */
+        /* --- LÓGICA DE ESTADOS Y ANIMACIONES --- */
 
         /* PASO 1: NORMAL */
         .state-1 .c-straight { opacity: 1; }
@@ -210,7 +224,7 @@
         .state-2 .dest-icon { opacity: 1; }
         .state-2 .dots-normal { opacity: 0; }
         .state-2 .dots-chaos { opacity: 1; }
-        .state-2 .brain-fill { fill: #fca5a5; } /* Cerebro rojo estrés */
+        .state-2 .brain-fill-rect { fill: #fca5a5; } 
 
         /* 3. TEMBLORES */
         .state-3 .c-tangled { opacity: 0.1; } 
@@ -220,21 +234,17 @@
         .state-3 .trav-hand { opacity: 1; animation: travel-shake 0.2s infinite; }
         .state-3 .alert-tremor { opacity: 1; }
 
-        /* 4. FATIGA (Doble descarga: Icono + Cerebro) */
+        /* 4. FATIGA */
         .state-4 .c-tangled { opacity: 0.1; }
-        .state-4 .c-tangled.stroke-yellow { opacity: 1; stroke-width: 6; stroke-dasharray: 10; }
+        .state-4 .c-tangled.stroke-yellow { opacity: 1; }
         .state-4 .icon-sleep { opacity: 1; font-size: 50px; animation: pulse-slow 2s infinite; }
         .state-4 .dots-chaos circle { opacity: 0.2; transition: opacity 2s; }
-        .state-4 .alert-fatigue { opacity: 1; }
         
-        /* Batería Externa - Agrandada y animada */
+        /* Animación de la batería en bucle con pausa */
         .state-4 .battery-container { opacity: 1; transform: scale(1.5) translate(-10px, -10px); }
-        .state-4 .battery-fill { animation: battery-drain 3s forwards; }
-        
-        /* Batería Interna (Cerebro) - El relleno baja */
-        .state-4 .brain-fill-rect { 
-            animation: brain-liquid-drain 3s forwards; /* Baja el nivel */
-        }
+        .state-4 .battery-fill { animation: battery-drain 5s infinite; } /* 3s descarga + 2s espera */
+        .state-4 .brain-fill-rect { animation: brain-liquid-drain 5s infinite; }
+        .state-4 .alert-fatigue { opacity: 1; }
 
         /* 5. CAMINAR */
         .state-5 .c-tangled { opacity: 0.1; }
@@ -269,16 +279,17 @@
         .state-9 .c-tangled { opacity: 0.2; }
         .state-9 .scan-laser { opacity: 1; animation: scanning-line 3s infinite linear; }
         .state-9 .hardware-ok { opacity: 1; animation: pop-in 0.5s ease forwards; }
-        .state-9 .brain-fill { fill: #fbcfe8; } /* Vuelve a rosa sano */
+        .state-9 .brain-fill-rect { fill: #fbcfe8; } 
 
         /* 10. TERAPIA */
         .state-10 .c-tangled { opacity: 0; }
         .state-10 .c-straight { opacity: 1; stroke-dasharray: 1000; animation: dash 2s forwards; }
         .state-10 .dest-icon { opacity: 1; }
         .state-10 .dots-normal { opacity: 1; }
-        .state-10 .brain-fill { fill: #fbcfe8; }
+        .state-10 .dots-chaos { opacity: 0; } 
+        .state-10 .brain-fill-rect { fill: #fbcfe8; }
 
-        /* ANIMACIONES */
+        /* ANIMACIONES CSS */
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         @keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -289,21 +300,22 @@
         @keyframes dash { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
         @keyframes pop-in { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
         
-        /* Animación Batería EXTERNA */
+        /* Batería: Descarga 60% tiempo, Espera 40% tiempo */
         @keyframes battery-drain {
             0% { width: 40px; fill: #10b981; } 
-            30% { width: 20px; fill: #eab308; } 
-            100% { width: 5px; fill: #ef4444; } 
+            20% { width: 20px; fill: #eab308; } 
+            60% { width: 5px; fill: #ef4444; } /* Fin descarga */
+            100% { width: 5px; fill: #ef4444; } /* Pausa */
         }
 
-        /* Animación Batería INTERNA (Cerebro se vacía) */
+        /* Vaciado vertical con ScaleY y pausa */
         @keyframes brain-liquid-drain {
-            0% { y: -50; height: 100; fill: #fbcfe8; } /* Lleno (Rosa Sano) */
-            30% { y: 0; height: 50; fill: #eab308; } /* Medio (Amarillo) */
-            100% { y: 40; height: 10; fill: #ef4444; } /* Vacío (Rojo) */
+            0% { transform: scaleY(1); fill: #fbcfe8; } 
+            20% { transform: scaleY(0.5); fill: #eab308; } 
+            60% { transform: scaleY(0.1); fill: #ef4444; } 
+            100% { transform: scaleY(0.1); fill: #ef4444; } 
         }
         
-        /* Animaciones Viajeros */
         @keyframes travel-shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, -1px); } }
         @keyframes travel-zigzag { 0% { transform: translateX(-10px); } 100% { transform: translateX(10px); } }
         @keyframes pain-pulse { 0% { transform: scale(1); } 90% { transform: scale(1); } 95% { transform: scale(1.5); } 100% { transform: scale(1); } }
@@ -328,7 +340,7 @@
                 
                 <g id="main-scene">
                     
-                    <!-- DEFINICIÓN CLIP-PATH PARA EFECTO LÍQUIDO -->
+                    <!-- CLIP-PATH LÍQUIDO -->
                     <defs>
                         <clipPath id="brainClip">
                             <path d="M-40,20 C-50,10 -50,-10 -40,-20 C-40,-40 -10,-50 0,-45 C10,-50 40,-40 40,-20 C50,-10 50,10 40,20 C40,40 10,45 0,45 C-10,45 -40,40 -40,20 Z" />
@@ -341,28 +353,22 @@
                         <rect class="headset" x="-65" y="25" width="15" height="25" rx="5" />
                         <rect class="headset" x="50" y="25" width="15" height="25" rx="5" />
                         
-                        <!-- CEREBRO "TANQUE DE LÍQUIDO" -->
+                        <!-- Tanque Líquido (Fondo gris + Líquido rosa) -->
                         <g clip-path="url(#brainClip)">
-                            <!-- Fondo (cuando está vacío) -->
                             <rect x="-60" y="-60" width="120" height="120" fill="#f1f5f9" />
-                            <!-- Líquido Animable -->
-                            <rect class="brain-fill-rect brain-fill" x="-60" y="-50" width="120" height="100" /> 
+                            <rect class="brain-fill-rect" x="-60" y="-60" width="120" height="120" /> 
                         </g>
                         
-                        <!-- Borde del cerebro -->
                         <path class="brain-outline" d="M-40,20 C-50,10 -50,-10 -40,-20 C-40,-40 -10,-50 0,-45 C10,-50 40,-40 40,-20 C50,-10 50,10 40,20 C40,40 10,45 0,45 C-10,45 -40,40 -40,20 Z" fill="none" stroke="#db2777" stroke-width="2.5" />
                         
-                        <!-- BATERÍA SOBRE EL CEREBRO (MÁS GRANDE Y ARRIBA) -->
+                        <!-- BATERÍA SOBRE EL CEREBRO -->
                         <g class="alert-marker battery-container" transform="translate(-25, -70)">
                             <rect class="battery-body" x="0" y="0" width="50" height="25" rx="3" />
                             <rect class="battery-fill" x="3" y="3" width="40" height="19" rx="1" /> 
                             <rect x="50" y="7" width="4" height="11" fill="#334155" />
                         </g>
 
-                        <!-- Ojos Mareo -->
                         <text x="0" y="10" class="alert-marker alert-dizzy" style="font-size: 50px;">🌀</text>
-                        
-                        <!-- Check OK -->
                         <text x="0" y="-30" class="hardware-ok" style="font-weight: bold;">✔</text>
                     </g>
 
@@ -394,13 +400,22 @@
                     <text x="200" y="480" class="alert-marker alert-pain" style="font-size: 50px; fill: #ef4444;">⚡</text> 
 
                     <!-- SEÑALES (Puntos normales) -->
+                    <!-- FIX: r="4" en HTML para Firefox -->
                     <g class="dots-normal">
-                        <circle class="signal-dot fill-red" data-path="pRojo" /><circle class="signal-dot fill-blue" data-path="pAzul" /><circle class="signal-dot fill-green" data-path="pVerde" /><circle class="signal-dot fill-yellow" data-path="pAmarillo" /><circle class="signal-dot fill-orange" data-path="pNaranja" />
+                        <circle class="signal-dot fill-red" r="4" data-path="pRojo" />
+                        <circle class="signal-dot fill-blue" r="4" data-path="pAzul" />
+                        <circle class="signal-dot fill-green" r="4" data-path="pVerde" />
+                        <circle class="signal-dot fill-yellow" r="4" data-path="pAmarillo" />
+                        <circle class="signal-dot fill-orange" r="4" data-path="pNaranja" />
                     </g>
                     
                     <!-- SEÑALES (Puntos Caos Generales) -->
                     <g class="dots-chaos">
-                        <circle class="signal-dot fill-red" data-path="pRojoBad" /><circle class="signal-dot fill-blue" data-path="pAzulBad" /><circle class="signal-dot fill-green" data-path="pVerdeBad" /><circle class="signal-dot fill-yellow" data-path="pAmarilloBad" /><circle class="signal-dot fill-orange" data-path="pNaranjaBad" />
+                        <circle class="signal-dot fill-red" r="4" data-path="pRojoBad" />
+                        <circle class="signal-dot fill-blue" r="4" data-path="pAzulBad" />
+                        <circle class="signal-dot fill-green" r="4" data-path="pVerdeBad" />
+                        <circle class="signal-dot fill-yellow" r="4" data-path="pAmarilloBad" />
+                        <circle class="signal-dot fill-orange" r="4" data-path="pNaranjaBad" />
                     </g>
 
                     <!-- VIAJEROS ESPECIALES (Tamaño 30px) -->
@@ -417,116 +432,106 @@
         </div>
 
         <div class="narrative-column">
-            
+            <!-- PASOS (Texto en Valenciano) -->
             <div class="step" data-step="1">
                 <div class="text-card">
-                    <h2>🎧 La Centralita</h2>
-                    <p>Tu cerebro envía órdenes por cables de colores: Rojo a la mano, Azul a la voz...</p>
+                    <h2>🎧 La Centraleta</h2>
+                    <p>El teu cervell envia ordres per cables de colors: Roig a la mà, Blau a la veu...</p>
                 </div>
             </div>
-
             <div class="step" data-step="2">
                 <div class="text-card" style="border-left-color: #64748b;">
-                    <h2>🪢 ¡Cables Cruzados!</h2>
-                    <p>Con el TNF, los cables se enredan. Las señales se pierden o van al sitio incorrecto.</p>
+                    <h2>🪢 Cables Creuats!</h2>
+                    <p>Amb el TNF, els cables s'emboliquen. Els senyals es perden o van al lloc incorrecte.</p>
                 </div>
             </div>
-
             <div class="step" data-step="3">
                 <div class="text-card" style="border-left-color: var(--c-red);">
-                    <h2>👋 Temblores</h2>
-                    <p>Mira el cable rojo. La orden "mano quieta" se convierte en una mano temblorosa.</p>
+                    <h2>👋 Tremolors</h2>
+                    <p>Mira el cable roig. L'ordre "mà quieta" es converteix en una mà tremolosa.</p>
                 </div>
             </div>
-
             <div class="step" data-step="4">
                 <div class="text-card" style="border-left-color: var(--c-yellow);">
                     <h2>🪫 Fatiga</h2>
-                    <p>El sistema gasta tanta energía en el caos que la batería se agota.</p>
+                    <p>El sistema gasta tanta energia en el caos que la bateria s'esgota.</p>
                 </div>
             </div>
-
             <div class="step" data-step="5">
                 <div class="text-card" style="border-left-color: var(--c-orange);">
                     <h2>🦶 Caminar Mal</h2>
-                    <p>Mira el cable naranja. El pie baja haciendo un zig-zag inestable.</p>
+                    <p>Mira el cable taronja. El peu baixa fent un zig-zag inestable.</p>
                 </div>
             </div>
-
             <div class="step" data-step="6">
                 <div class="text-card" style="border-left-color: #8b5cf6;">
-                    <h2>🌀 Mareos</h2>
-                    <p>El equilibrio falla. Todo el gráfico empieza a balancearse.</p>
+                    <h2>🌀 Marejos</h2>
+                    <p>L'equilibri falla. Tot el gràfic comença a balancejar-se.</p>
                 </div>
             </div>
-
             <div class="step" data-step="7">
                 <div class="text-card" style="border-left-color: var(--c-blue);">
-                    <h2>💬 Bloqueo</h2>
-                    <p>Por el cable azul no bajan palabras claras, bajan símbolos de confusión.</p>
+                    <h2>💬 Bloqueig</h2>
+                    <p>Pel cable blau no baixen paraules clares, baixen símbols de confusió.</p>
                 </div>
             </div>
-
             <div class="step" data-step="8">
                 <div class="text-card" style="border-left-color: var(--c-green);">
                     <h2>⚡ Dolor</h2>
-                    <p>El cable verde lanza latigazos de dolor (rayos) aunque no haya herida.</p>
+                    <p>El cable verd llança fuetades de dolor (llampecs) encara que no hi haja ferida.</p>
                 </div>
             </div>
-
             <div class="step" data-step="9">
                 <div class="text-card" style="border-left-color: #10b981;">
-                    <h2>🔍 El Escáner</h2>
-                    <p>Al escanear, vemos que los cables físicos están intactos. Es solo software.</p>
+                    <h2>🔍 L'Escàner</h2>
+                    <p>En escanejar, veiem que els cables físics estan intactes. És només programari.</p>
                 </div>
             </div>
-
             <div class="step" data-step="10">
                 <div class="text-card" style="border-left-color: #3b82f6;">
-                    <h2>🧩 Reprogramación</h2>
-                    <p>Con terapia, desenredamos el nudo y todo vuelve a fluir.</p>
+                    <h2>🧩 Reprogramació</h2>
+                    <p>Amb teràpia, desemboliquem el nus i tot torna a fluir.</p>
                 </div>
             </div>
-
         </div>
     </main>
 
     <script>
-        // MOTOR DE MOVIMIENTO
+        // MOTOR JS ESTABLE (TIPO EJEMPLO USUARIO)
         const travelers = document.querySelectorAll('.signal-dot, .traveler-emoji');
         
         travelers.forEach(el => {
             const pathId = el.dataset.path;
-            let path = document.getElementById(pathId);
+            const path = document.getElementById(pathId);
             
             if (path) {
                 const length = path.getTotalLength();
-                // Velocidad base
-                const speed = 0.0002 + Math.random() * 0.0001; 
+                // Velocidad: longitud * factor pequeño
+                const speed = 0.00015 + Math.random() * 0.0002; 
+                const offset = Math.random() * length; 
                 let start = performance.now();
 
                 function move(t) {
-                    const dist = ((t - start) * speed * length) % length;
+                    // Lógica del ejemplo usuario
+                    const dist = (offset + ((t - start) * speed * length)) % length;
                     const point = path.getPointAtLength(dist);
                     
-                    if (el.tagName === 'text') {
+                    if (el.tagName.toLowerCase() === 'text') {
                         el.setAttribute('x', point.x);
                         el.setAttribute('y', point.y);
                     } else {
                         el.setAttribute('cx', point.x);
                         el.setAttribute('cy', point.y);
                     }
-                    
                     requestAnimationFrame(move);
                 }
                 requestAnimationFrame(move);
             }
         });
 
-        // SCROLL OBSERVER
+        // SCROLL
         const graphicStage = document.getElementById('graphicStage');
         const steps = document.querySelectorAll('.step');
-        
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -538,7 +543,6 @@
                 }
             });
         }, { threshold: 0.6, rootMargin: "-10% 0px -10% 0px" });
-        
         steps.forEach(step => observer.observe(step));
     </script>
 </body>
