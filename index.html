@@ -3,22 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Software del Cerebro</title>
+    <title>La Centralita del Cerebro</title>
     <style>
-        /* --- ESTÉTICA GENERAL --- */
+        /* --- ESTÉTICA --- */
         :root {
-            --bg-color: #0f172a;
-            --text-color: #e2e8f0;
-            --accent-blue: #38bdf8;
-            --accent-red: #f87171;
-            --accent-green: #4ade80;
-            --card-bg: rgba(30, 41, 59, 0.98); /* Fondo casi sólido para lectura */
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            
+            /* Colores de Canales */
+            --c-red: #ef4444;    /* Mano */
+            --c-blue: #3b82f6;   /* Habla */
+            --c-green: #10b981;  /* Dolor/Corazón */
+            --c-yellow: #eab308; /* Sueño/Fatiga */
+            --c-orange: #f97316; /* Pie/Marcha */
+
+            --card-bg: rgba(255, 255, 255, 0.98);
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow-x: hidden;
@@ -30,212 +35,287 @@
             flex-direction: column;
         }
 
-        /* --- GRÁFICO (Sticky) --- */
+        /* --- GRÁFICO FIJO --- */
         .graphic-stage {
             position: sticky;
             top: 0;
             z-index: 1;
             width: 100%;
-            /* MÓVIL: Ocupa la mitad superior para dejar sitio al texto abajo */
             height: 50vh; 
-            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            transition: all 0.5s ease;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: background 0.5s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-bottom: none; 
         }
 
-        /* --- TEXTOS (Scroll) --- */
+        /* --- TEXTOS --- */
         .narrative-column {
             position: relative;
             z-index: 2;
-            /* MÓVIL: Margen negativo leve para solapamiento estético controlado */
             margin-top: -5vh; 
-            padding-bottom: 30vh;
+            padding-bottom: 40vh;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .step {
-            /* MÓVIL: Altura suficiente para scroll cómodo, pero contenido centrado */
-            min-height: 70vh; 
+            min-height: 85vh; 
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1rem;
-            /* Transiciones de opacidad para foco */
             opacity: 0.2; 
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        /* El paso activo se ve perfecto */
         .step.active {
             opacity: 1;
-            transform: scale(1.02);
+            transform: translateY(-10px);
         }
 
         .text-card {
             background: var(--card-bg);
-            /* MÓVIL: Diseño compacto */
             padding: 1.5rem; 
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            border-left: 4px solid var(--accent-blue);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.1);
-            width: 90%; /* No ocupa todo el ancho */
-            margin: 0 auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border: 2px solid #fff;
+            width: 90%;
+            text-align: center;
         }
 
-        /* Tipografía ajustada para móvil */
-        h2 { 
-            margin-top: 0; 
-            color: #fff; 
-            font-size: 1.4rem; 
-            margin-bottom: 0.5rem;
-        }
-        p { 
-            line-height: 1.5; 
-            font-size: 1rem; 
-            color: #cbd5e1; 
-            margin: 0;
-        }
+        h2 { margin: 0 0 0.5rem 0; color: #1e293b; font-size: 1.5rem; }
+        p { margin: 0; color: #64748b; line-height: 1.6; }
 
-        /* --- SVG STYLES --- */
+        /* --- SVG GENERAL --- */
         svg {
             width: 100%;
             height: 100%;
-            max-width: 500px;
-        }
-
-        .silhouette {
-            fill: #0f172a;
-            stroke: #475569;
-            stroke-width: 1.5;
-            opacity: 0.9;
-            stroke-linejoin: round;
-            stroke-linecap: round;
-        }
-
-        .nerve-path {
-            fill: none;
-            stroke: #334155;
-            stroke-width: 1;
-            opacity: 0.6;
+            max-width: 600px;
         }
         
-        .main-nerve {
-            stroke: #64748b;
-            stroke-width: 1.5;
-            opacity: 0.8;
-        }
+        svg * { transform-box: fill-box; transform-origin: center; }
 
-        .brain-emoji {
-            font-size: 40px;
-            user-select: none;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
-        }
+        /* --- ELEMENTOS GRÁFICOS --- */
+        
+        .headset { fill: #334155; }
 
-        /* --- ESTADOS Y ANIMACIONES --- */
-        .signal-dot {
-            r: 3;
-            opacity: 0; 
-            transition: fill 0.3s, r 0.3s, opacity 0.3s;
-        }
-
-        .symptom-marker {
-            opacity: 0;
+        /* CEREBRO "BATERÍA" */
+        /* Ahora el cerebro tiene un relleno animable */
+        .brain-outline {
             fill: none;
-            stroke: none;
+            stroke: #db2777; 
+            stroke-width: 3;
+            pointer-events: none; /* Dejar pasar clicks si hubiera */
+            z-index: 10;
+        }
+        
+        .brain-fill {
+            fill: #fbcfe8; /* Color base (Rosa sano) */
+            transition: fill 0.5s, height 0.5s, y 0.5s;
+        }
+
+        /* Cables Generales */
+        .cable {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: opacity 0.5s, stroke-width 0.3s, stroke 0.3s;
+            opacity: 0.2; 
+        }
+
+        .c-straight { opacity: 1; }
+        .c-tangled { opacity: 0; }
+
+        /* Colores */
+        .stroke-red { stroke: var(--c-red); }
+        .stroke-blue { stroke: var(--c-blue); }
+        .stroke-green { stroke: var(--c-green); }
+        .stroke-yellow { stroke: var(--c-yellow); }
+        .stroke-orange { stroke: var(--c-orange); }
+
+        .dest-icon {
+            font-size: 30px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            text-anchor: middle;
+            user-select: none;
+        }
+
+        /* Señales */
+        .signal-dot { r: 4; fill: #fff; stroke-width: 1.5; transition: opacity 0.3s; }
+        .traveler-emoji { 
+            font-size: 30px; 
+            opacity: 0; 
+            transition: opacity 0.3s; 
+            text-anchor: middle; 
+            dominant-baseline: middle; 
+        }
+        
+        .fill-red { fill: var(--c-red); }
+        .fill-blue { fill: var(--c-blue); }
+        .fill-green { fill: var(--c-green); }
+        .fill-yellow { fill: var(--c-yellow); }
+        .fill-orange { fill: var(--c-orange); }
+
+        /* Marcadores de Alerta */
+        .alert-marker {
+            font-size: 40px;
+            opacity: 0; 
+            pointer-events: none;
+            transition: opacity 0.3s;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+
+        /* Batería Gigante */
+        .battery-container {
             transition: opacity 0.5s;
         }
+        .battery-body { fill: white; stroke: #334155; stroke-width: 3; }
+        .battery-fill { fill: #10b981; }
 
-        /* Estado 1: Normal */
-        .state-1 .signal-dot {
-            fill: var(--accent-blue);
-            opacity: 1;
-            filter: drop-shadow(0 0 4px var(--accent-blue));
+        /* Escáner */
+        .scan-laser {
+            stroke: #10b981;
+            stroke-width: 3;
+            opacity: 0;
+            filter: drop-shadow(0 0 5px #10b981);
         }
-
-        /* Estado 2: Error */
-        .state-2 .signal-dot {
-            fill: var(--accent-red);
-            opacity: 1;
-            animation: glitch-strobe 0.1s infinite;
-        }
-        .state-2 .symptom-marker {
-            opacity: 1;
-            stroke: var(--accent-red);
-            stroke-width: 2;
-            fill: none;
-            animation: pulse-red 1s infinite;
+        .hardware-ok {
+            font-size: 20px;
+            fill: #10b981;
+            opacity: 0;
+            text-anchor: middle;
+            transition: opacity 0.5s 0.5s;
         }
 
-        /* Estado 3: Hardware */
-        .state-3 .signal-dot { opacity: 0; }
-        .state-3 .symptom-marker { opacity: 0; }
-        .state-3 .hardware-scan {
-            opacity: 1;
-            stroke: var(--accent-green);
-            stroke-width: 1.5;
-            stroke-dasharray: 4,4;
-            fill: none;
-            animation: scan 3s ease-in-out infinite;
-            transform-box: fill-box;
-            transform-origin: center;
+        /* --- LÓGICA DE ESTADOS --- */
+
+        /* PASO 1: NORMAL */
+        .state-1 .c-straight { opacity: 1; }
+        .state-1 .c-tangled { opacity: 0; }
+        .state-1 .dest-icon { opacity: 1; }
+        .state-1 .dots-normal { opacity: 1; }
+        .state-1 .dots-chaos { opacity: 0; }
+
+        /* PASO 2: CAOS */
+        .state-2 .c-straight { opacity: 0; }
+        .state-2 .c-tangled { opacity: 1; }
+        .state-2 .dest-icon { opacity: 1; }
+        .state-2 .dots-normal { opacity: 0; }
+        .state-2 .dots-chaos { opacity: 1; }
+        .state-2 .brain-fill { fill: #fca5a5; } /* Cerebro rojo estrés */
+
+        /* 3. TEMBLORES */
+        .state-3 .c-tangled { opacity: 0.1; } 
+        .state-3 .c-tangled.stroke-red { opacity: 1; } 
+        .state-3 .icon-hand { opacity: 1; font-size: 50px; animation: shake 0.2s infinite; }
+        .state-3 .dots-chaos circle { opacity: 0; }
+        .state-3 .trav-hand { opacity: 1; animation: travel-shake 0.2s infinite; }
+        .state-3 .alert-tremor { opacity: 1; }
+
+        /* 4. FATIGA (Doble descarga: Icono + Cerebro) */
+        .state-4 .c-tangled { opacity: 0.1; }
+        .state-4 .c-tangled.stroke-yellow { opacity: 1; stroke-width: 6; stroke-dasharray: 10; }
+        .state-4 .icon-sleep { opacity: 1; font-size: 50px; animation: pulse-slow 2s infinite; }
+        .state-4 .dots-chaos circle { opacity: 0.2; transition: opacity 2s; }
+        .state-4 .alert-fatigue { opacity: 1; }
+        
+        /* Batería Externa - Agrandada y animada */
+        .state-4 .battery-container { opacity: 1; transform: scale(1.5) translate(-10px, -10px); }
+        .state-4 .battery-fill { animation: battery-drain 3s forwards; }
+        
+        /* Batería Interna (Cerebro) - El relleno baja */
+        .state-4 .brain-fill-rect { 
+            animation: brain-liquid-drain 3s forwards; /* Baja el nivel */
         }
 
-        /* Estado 4: Terapia */
-        .state-4 .signal-dot {
-            fill: var(--accent-green);
-            opacity: 1;
-            filter: drop-shadow(0 0 4px var(--accent-green));
+        /* 5. CAMINAR */
+        .state-5 .c-tangled { opacity: 0.1; }
+        .state-5 .c-tangled.stroke-orange { opacity: 1; stroke-width: 6; }
+        .state-5 .icon-foot { opacity: 1; font-size: 50px; animation: wobble 1s infinite; }
+        .state-5 .dots-chaos circle:not(.fill-orange) { opacity: 0; }
+        .state-5 .trav-foot { opacity: 1; animation: travel-zigzag 0.6s infinite alternate; }
+        .state-5 .alert-gait { opacity: 1; }
+
+        /* 6. MAREO */
+        .state-6 .c-tangled { opacity: 0.1; }
+        .state-6 .alert-dizzy { opacity: 1; animation: spin 2s infinite linear; }
+        .state-6 .dots-chaos { opacity: 0; }
+        .state-6 #main-scene { animation: dizzy-sway 3s infinite ease-in-out; }
+
+        /* 7. HABLA */
+        .state-7 .c-tangled { opacity: 0.1; }
+        .state-7 .c-tangled.stroke-blue { opacity: 1; stroke-width: 6; }
+        .state-7 .icon-speech { opacity: 1; font-size: 50px; }
+        .state-7 .dots-chaos circle:not(.fill-blue) { opacity: 0; }
+        .state-7 .trav-speech { opacity: 1; } 
+        .state-7 .alert-speech { opacity: 1; animation: jitter 0.5s infinite; }
+
+        /* 8. DOLOR */
+        .state-8 .c-tangled { opacity: 0.1; }
+        .state-8 .c-tangled.stroke-green { opacity: 1; stroke-width: 6; }
+        .state-8 .icon-heart { opacity: 1; font-size: 50px; }
+        .state-8 .trav-pain { opacity: 1; animation: pain-pulse 1s infinite; }
+        .state-8 .alert-pain { opacity: 1; animation: flash 0.8s infinite; }
+
+        /* 9. ESCÁNER */
+        .state-9 .c-tangled { opacity: 0.2; }
+        .state-9 .scan-laser { opacity: 1; animation: scanning-line 3s infinite linear; }
+        .state-9 .hardware-ok { opacity: 1; animation: pop-in 0.5s ease forwards; }
+        .state-9 .brain-fill { fill: #fbcfe8; } /* Vuelve a rosa sano */
+
+        /* 10. TERAPIA */
+        .state-10 .c-tangled { opacity: 0; }
+        .state-10 .c-straight { opacity: 1; stroke-dasharray: 1000; animation: dash 2s forwards; }
+        .state-10 .dest-icon { opacity: 1; }
+        .state-10 .dots-normal { opacity: 1; }
+        .state-10 .brain-fill { fill: #fbcfe8; }
+
+        /* ANIMACIONES */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        @keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes jitter { 0% { transform: scale(1); } 20% { transform: scale(1.2); } 40% { transform: scale(0.9); } }
+        @keyframes flash { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+        @keyframes scanning-line { 0% { transform: translateY(-50px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(450px); opacity: 0; } }
+        @keyframes dash { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+        @keyframes pop-in { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        
+        /* Animación Batería EXTERNA */
+        @keyframes battery-drain {
+            0% { width: 40px; fill: #10b981; } 
+            30% { width: 20px; fill: #eab308; } 
+            100% { width: 5px; fill: #ef4444; } 
         }
 
-        @keyframes glitch-strobe {
-            0% { opacity: 1; r: 3; }
-            50% { opacity: 0.3; r: 5; } 
-            100% { opacity: 1; r: 3; }
+        /* Animación Batería INTERNA (Cerebro se vacía) */
+        @keyframes brain-liquid-drain {
+            0% { y: -50; height: 100; fill: #fbcfe8; } /* Lleno (Rosa Sano) */
+            30% { y: 0; height: 50; fill: #eab308; } /* Medio (Amarillo) */
+            100% { y: 40; height: 10; fill: #ef4444; } /* Vacío (Rojo) */
         }
-        @keyframes pulse-red {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
-        @keyframes scan {
-            0% { stroke-dashoffset: 100; opacity: 0.5; }
-            50% { stroke-dashoffset: 0; opacity: 1; }
-            100% { stroke-dashoffset: -100; opacity: 0.5; }
-        }
+        
+        /* Animaciones Viajeros */
+        @keyframes travel-shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 100% { transform: translate(1px, -1px); } }
+        @keyframes travel-zigzag { 0% { transform: translateX(-10px); } 100% { transform: translateX(10px); } }
+        @keyframes pain-pulse { 0% { transform: scale(1); } 90% { transform: scale(1); } 95% { transform: scale(1.5); } 100% { transform: scale(1); } }
+        @keyframes dizzy-sway { 0% { transform: rotate(0deg); } 25% { transform: rotate(2deg); } 75% { transform: rotate(-2deg); } 100% { transform: rotate(0deg); } }
+        @keyframes zigzag-small { 0% { transform: translateX(-2px); } 100% { transform: translateX(2px); } }
 
-        /* --- MEDIA QUERY: PANTALLAS GRANDES (+700px) --- */
-        /* Aquí restauramos el diseño de doble columna */
+        /* MEDIA QUERIES */
         @media (min-width: 700px) {
-            .scrolly-container {
-                flex-direction: row;
-            }
-            .graphic-stage {
-                width: 50%;
-                height: 100vh; /* Altura completa en escritorio */
-                top: 0;
-            }
-            .narrative-column {
-                width: 50%;
-                padding-bottom: 40vh;
-                margin-top: 0; /* Reset margen */
-            }
-            .step {
-                min-height: 90vh;
-            }
-            .text-card {
-                padding: 2.5rem;
-                max-width: 80%;
-            }
-            h2 { font-size: 1.8rem; }
-            p { font-size: 1.1rem; }
+            .scrolly-container { flex-direction: row; }
+            .graphic-stage { width: 50%; height: 100vh; }
+            .narrative-column { width: 50%; padding-bottom: 40vh; margin-top: 0; }
+            .text-card { max-width: 80%; padding: 2.5rem; }
         }
     </style>
 </head>
@@ -244,40 +324,95 @@
     <main class="scrolly-container">
         
         <div class="graphic-stage" id="graphicStage">
-            <svg viewBox="0 0 300 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
                 
-                <path class="silhouette" d="M 150 20 C 165 20 175 35 175 55 C 175 65 170 75 165 80 L 190 85 C 210 90 220 100 225 120 L 230 280 C 230 290 225 295 215 295 C 205 295 200 290 200 280 L 195 180 L 185 320 L 185 550 L 195 570 L 160 570 L 160 350 L 150 350 L 140 350 L 140 570 L 105 570 L 115 550 L 115 320 L 105 180 L 100 280 C 100 290 95 295 85 295 C 75 295 70 290 70 280 L 75 120 C 80 100 90 90 110 85 L 135 80 C 130 75 125 65 125 55 C 125 35 135 20 150 20 Z" />
+                <g id="main-scene">
+                    
+                    <!-- DEFINICIÓN CLIP-PATH PARA EFECTO LÍQUIDO -->
+                    <defs>
+                        <clipPath id="brainClip">
+                            <path d="M-40,20 C-50,10 -50,-10 -40,-20 C-40,-40 -10,-50 0,-45 C10,-50 40,-40 40,-20 C50,-10 50,10 40,20 C40,40 10,45 0,45 C-10,45 -40,40 -40,20 Z" />
+                        </clipPath>
+                    </defs>
 
-                <!-- Red Nerviosa -->
-                <path id="n1" class="nerve-path main-nerve" d="M150,60 C160,80 200,100 220,275" />
-                <path id="n2" class="nerve-path" d="M150,60 C140,80 100,100 80,275" />
-                <path id="n3" class="nerve-path" d="M150,60 C155,200 170,400 185,550" />
-                <path id="n4" class="nerve-path main-nerve" d="M150,60 C145,200 130,400 115,550" />
-                <path id="n5" class="nerve-path main-nerve" d="M150,60 C150,150 150,200 150,250" />
-                <path id="n6" class="nerve-path" d="M150,55 C155,55 160,50 162,50" />
-                <path id="n7" class="nerve-path" d="M150,55 C145,55 138,52 135,55" />
-                <path id="n8" class="nerve-path main-nerve" d="M150,55 L150,75" />
-                <path id="n9" class="nerve-path" d="M150,70 C160,100 170,120 175,160" />
-                <path id="n10" class="nerve-path" d="M150,70 C140,100 130,120 125,160" />
-                <path id="n11" class="nerve-path" d="M150,60 C155,200 160,300 170,380" />
-                <path id="n12" class="nerve-path" d="M150,60 C140,70 120,80 110,100" />
+                    <!-- CEREBRO -->
+                    <g transform="translate(200, 80)">
+                        <path class="headset" d="M-60,10 C-60,-50 60,-50 60,10 L60,30 L50,30 L50,10 C50,-40 -50,-40 -50,10 L-50,30 L-60,30 Z" />
+                        <rect class="headset" x="-65" y="25" width="15" height="25" rx="5" />
+                        <rect class="headset" x="50" y="25" width="15" height="25" rx="5" />
+                        
+                        <!-- CEREBRO "TANQUE DE LÍQUIDO" -->
+                        <g clip-path="url(#brainClip)">
+                            <!-- Fondo (cuando está vacío) -->
+                            <rect x="-60" y="-60" width="120" height="120" fill="#f1f5f9" />
+                            <!-- Líquido Animable -->
+                            <rect class="brain-fill-rect brain-fill" x="-60" y="-50" width="120" height="100" /> 
+                        </g>
+                        
+                        <!-- Borde del cerebro -->
+                        <path class="brain-outline" d="M-40,20 C-50,10 -50,-10 -40,-20 C-40,-40 -10,-50 0,-45 C10,-50 40,-40 40,-20 C50,-10 50,10 40,20 C40,40 10,45 0,45 C-10,45 -40,40 -40,20 Z" fill="none" stroke="#db2777" stroke-width="2.5" />
+                        
+                        <!-- BATERÍA SOBRE EL CEREBRO (MÁS GRANDE Y ARRIBA) -->
+                        <g class="alert-marker battery-container" transform="translate(-25, -70)">
+                            <rect class="battery-body" x="0" y="0" width="50" height="25" rx="3" />
+                            <rect class="battery-fill" x="3" y="3" width="40" height="19" rx="1" /> 
+                            <rect x="50" y="7" width="4" height="11" fill="#334155" />
+                        </g>
 
-                <!-- Señales JS -->
-                <circle class="signal-dot" data-path="n1" r="3" /><circle class="signal-dot" data-path="n2" r="3" /><circle class="signal-dot" data-path="n3" r="3" /><circle class="signal-dot" data-path="n4" r="3" /><circle class="signal-dot" data-path="n5" r="3" /><circle class="signal-dot" data-path="n6" r="3" /><circle class="signal-dot" data-path="n7" r="3" /><circle class="signal-dot" data-path="n8" r="3" /><circle class="signal-dot" data-path="n9" r="3" /><circle class="signal-dot" data-path="n10" r="3" /><circle class="signal-dot" data-path="n11" r="3" /><circle class="signal-dot" data-path="n12" r="3" />
+                        <!-- Ojos Mareo -->
+                        <text x="0" y="10" class="alert-marker alert-dizzy" style="font-size: 50px;">🌀</text>
+                        
+                        <!-- Check OK -->
+                        <text x="0" y="-30" class="hardware-ok" style="font-weight: bold;">✔</text>
+                    </g>
 
-                <!-- Marcadores -->
-                <circle class="symptom-marker" cx="220" cy="275" r="15" />
-                <rect class="symptom-marker" x="105" y="540" width="20" height="20" />
-                <circle class="symptom-marker" cx="162" cy="50" r="5" fill="none" />
-                <path class="symptom-marker" d="M145,75 Q150,80 155,75" />
-                <path class="symptom-marker" d="M140,250 L150,240 L160,260 L170,250" />
+                    <!-- CABLES RECTOS -->
+                    <path id="pRojo" class="cable c-straight stroke-red" d="M170,125 C150,200 60,300 60,500" />
+                    <path id="pAzul" class="cable c-straight stroke-blue" d="M185,125 C180,200 130,300 130,500" />
+                    <path id="pVerde" class="cable c-straight stroke-green" d="M200,125 C200,200 200,300 200,500" />
+                    <path id="pAmarillo" class="cable c-straight stroke-yellow" d="M215,125 C220,200 270,300 270,500" />
+                    <path id="pNaranja" class="cable c-straight stroke-orange" d="M230,125 C250,200 340,300 340,500" />
 
-                <!-- Escáner -->
-                <circle class="hardware-scan" cx="150" cy="55" r="30" style="opacity:0" />
-                <circle class="hardware-scan" cx="150" cy="250" r="25" style="opacity:0" />
-                <circle class="hardware-scan" cx="220" cy="275" r="20" style="opacity:0" />
+                    <!-- CABLES ENREDADOS -->
+                    <path id="pRojoBad" class="cable c-tangled stroke-red" d="M170,125 C170,250 250,250 200,500" />
+                    <path id="pAzulBad" class="cable c-tangled stroke-blue" d="M185,125 C185,250 100,250 60,500" />
+                    <path id="pVerdeBad" class="cable c-tangled stroke-green" d="M200,125 C200,200 300,300 270,500" />
+                    <path id="pAmarilloBad" class="cable c-tangled stroke-yellow" d="M215,125 C250,200 200,300 340,500" />
+                    <path id="pNaranjaBad" class="cable c-tangled stroke-orange" d="M230,125 C150,200 200,300 130,500" />
 
-                <text x="150" y="65" text-anchor="middle" class="brain-emoji">🧠</text>
+                    <!-- ICONOS DESTINO -->
+                    <g transform="translate(60, 540)"><text class="dest-icon icon-hand">👋</text><text y="-30" class="hardware-ok">✔</text></g>
+                    <g transform="translate(130, 540)"><text class="dest-icon icon-speech">💬</text><text y="-30" class="hardware-ok">✔</text></g>
+                    <g transform="translate(200, 540)"><text class="dest-icon icon-heart">❤️</text><text y="-30" class="hardware-ok">✔</text></g>
+                    <g transform="translate(270, 540)"><text class="dest-icon icon-sleep">💤</text><text y="-30" class="hardware-ok">✔</text></g>
+                    <g transform="translate(340, 540)"><text class="dest-icon icon-foot">🦶</text><text y="-30" class="hardware-ok">✔</text></g>
+
+                    <!-- ALERTAS FINALES -->
+                    <text x="60" y="480" class="alert-marker alert-tremor">⚡</text> 
+                    <text x="340" y="480" class="alert-marker alert-gait">❓</text> 
+                    <text x="130" y="480" class="alert-marker alert-speech">#?!</text> 
+                    <text x="200" y="480" class="alert-marker alert-pain" style="font-size: 50px; fill: #ef4444;">⚡</text> 
+
+                    <!-- SEÑALES (Puntos normales) -->
+                    <g class="dots-normal">
+                        <circle class="signal-dot fill-red" data-path="pRojo" /><circle class="signal-dot fill-blue" data-path="pAzul" /><circle class="signal-dot fill-green" data-path="pVerde" /><circle class="signal-dot fill-yellow" data-path="pAmarillo" /><circle class="signal-dot fill-orange" data-path="pNaranja" />
+                    </g>
+                    
+                    <!-- SEÑALES (Puntos Caos Generales) -->
+                    <g class="dots-chaos">
+                        <circle class="signal-dot fill-red" data-path="pRojoBad" /><circle class="signal-dot fill-blue" data-path="pAzulBad" /><circle class="signal-dot fill-green" data-path="pVerdeBad" /><circle class="signal-dot fill-yellow" data-path="pAmarilloBad" /><circle class="signal-dot fill-orange" data-path="pNaranjaBad" />
+                    </g>
+
+                    <!-- VIAJEROS ESPECIALES (Tamaño 30px) -->
+                    <text class="traveler-emoji trav-hand" data-path="pRojoBad">👋</text>
+                    <text class="traveler-emoji trav-foot" data-path="pNaranjaBad">🦶</text>
+                    <text class="traveler-emoji trav-speech" data-path="pAzulBad" style="font-size:30px; font-weight:bold;">#?!</text>
+                    <text class="traveler-emoji trav-pain" data-path="pVerdeBad">⚡</text>
+
+                    <!-- ESCÁNER -->
+                    <line class="scan-laser" x1="20" y1="100" x2="380" y2="100" />
+                </g>
+
             </svg>
         </div>
 
@@ -285,29 +420,71 @@
             
             <div class="step" data-step="1">
                 <div class="text-card">
-                    <h2>📞 La Centralita Perfecta</h2>
-                    <p>Imagina tu cerebro como una centralita de operaciones ultra eficiente. Cuando quieres moverte o hablar, envía un "email eléctrico" instantáneo por los nervios.</p>
+                    <h2>🎧 La Centralita</h2>
+                    <p>Tu cerebro envía órdenes por cables de colores: Rojo a la mano, Azul a la voz...</p>
                 </div>
             </div>
 
             <div class="step" data-step="2">
-                <div class="text-card" style="border-left-color: var(--accent-red);">
-                    <h2>⚡ El "Glitch"</h2>
-                    <p>En el TNF, el hardware está bien, pero el software falla. La señal se interrumpe y la orden "mover mano" se convierte en "temblor".</p>
+                <div class="text-card" style="border-left-color: #64748b;">
+                    <h2>🪢 ¡Cables Cruzados!</h2>
+                    <p>Con el TNF, los cables se enredan. Las señales se pierden o van al sitio incorrecto.</p>
                 </div>
             </div>
 
             <div class="step" data-step="3">
-                <div class="text-card" style="border-left-color: var(--accent-green);">
-                    <h2>💾 Hardware Sano</h2>
-                    <p>La clave: Si hacemos un escáner, todo sale perfecto. El cerebro y los órganos están intactos. No hay heridas.</p>
+                <div class="text-card" style="border-left-color: var(--c-red);">
+                    <h2>👋 Temblores</h2>
+                    <p>Mira el cable rojo. La orden "mano quieta" se convierte en una mano temblorosa.</p>
                 </div>
             </div>
 
             <div class="step" data-step="4">
-                <div class="text-card" style="border-left-color: var(--accent-blue);">
-                    <h2>🛠️ Reprogramación</h2>
-                    <p>Con terapia, enseñamos al cerebro a usar el camino correcto de nuevo. La señal vuelve a fluir y los síntomas disminuyen.</p>
+                <div class="text-card" style="border-left-color: var(--c-yellow);">
+                    <h2>🪫 Fatiga</h2>
+                    <p>El sistema gasta tanta energía en el caos que la batería se agota.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="5">
+                <div class="text-card" style="border-left-color: var(--c-orange);">
+                    <h2>🦶 Caminar Mal</h2>
+                    <p>Mira el cable naranja. El pie baja haciendo un zig-zag inestable.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="6">
+                <div class="text-card" style="border-left-color: #8b5cf6;">
+                    <h2>🌀 Mareos</h2>
+                    <p>El equilibrio falla. Todo el gráfico empieza a balancearse.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="7">
+                <div class="text-card" style="border-left-color: var(--c-blue);">
+                    <h2>💬 Bloqueo</h2>
+                    <p>Por el cable azul no bajan palabras claras, bajan símbolos de confusión.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="8">
+                <div class="text-card" style="border-left-color: var(--c-green);">
+                    <h2>⚡ Dolor</h2>
+                    <p>El cable verde lanza latigazos de dolor (rayos) aunque no haya herida.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="9">
+                <div class="text-card" style="border-left-color: #10b981;">
+                    <h2>🔍 El Escáner</h2>
+                    <p>Al escanear, vemos que los cables físicos están intactos. Es solo software.</p>
+                </div>
+            </div>
+
+            <div class="step" data-step="10">
+                <div class="text-card" style="border-left-color: #3b82f6;">
+                    <h2>🧩 Reprogramación</h2>
+                    <p>Con terapia, desenredamos el nudo y todo vuelve a fluir.</p>
                 </div>
             </div>
 
@@ -315,28 +492,41 @@
     </main>
 
     <script>
-        const dots = document.querySelectorAll('.signal-dot');
-        dots.forEach(dot => {
-            const pathId = dot.dataset.path;
-            const path = document.getElementById(pathId);
+        // MOTOR DE MOVIMIENTO
+        const travelers = document.querySelectorAll('.signal-dot, .traveler-emoji');
+        
+        travelers.forEach(el => {
+            const pathId = el.dataset.path;
+            let path = document.getElementById(pathId);
+            
             if (path) {
                 const length = path.getTotalLength();
-                const speed = 0.00015 + Math.random() * 0.0002; 
-                const offset = Math.random() * length; 
+                // Velocidad base
+                const speed = 0.0002 + Math.random() * 0.0001; 
                 let start = performance.now();
+
                 function move(t) {
-                    const dist = (offset + (t * speed * length)) % length;
+                    const dist = ((t - start) * speed * length) % length;
                     const point = path.getPointAtLength(dist);
-                    dot.setAttribute('cx', point.x);
-                    dot.setAttribute('cy', point.y);
+                    
+                    if (el.tagName === 'text') {
+                        el.setAttribute('x', point.x);
+                        el.setAttribute('y', point.y);
+                    } else {
+                        el.setAttribute('cx', point.x);
+                        el.setAttribute('cy', point.y);
+                    }
+                    
                     requestAnimationFrame(move);
                 }
                 requestAnimationFrame(move);
             }
         });
 
+        // SCROLL OBSERVER
         const graphicStage = document.getElementById('graphicStage');
         const steps = document.querySelectorAll('.step');
+        
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -344,10 +534,11 @@
                     entry.target.classList.add('active');
                     const stepNumber = entry.target.dataset.step;
                     graphicStage.className = 'graphic-stage'; 
-                    if (stepNumber) graphicStage.classList.add(`state-${stepNumber}`);
+                    graphicStage.classList.add(`state-${stepNumber}`);
                 }
             });
-        }, { threshold: 0.5, rootMargin: "-10% 0px -10% 0px" });
+        }, { threshold: 0.6, rootMargin: "-10% 0px -10% 0px" });
+        
         steps.forEach(step => observer.observe(step));
     </script>
 </body>
